@@ -1,13 +1,13 @@
-﻿function Get-SPSqlRCabFile {
+﻿function Get-SPSqlMLCabFile {
     <#
     .SYNOPSIS
     This function accesses the Microsoft website to check the available cab files for R server and Python on SQL
 
     .DESCRIPTION
-    The function accesses the Microsoft page "https://docs.microsoft.com/en-us/sql/advanced-analytics/install/sql-ml-cab-downloads" which displays the latest SQL Server patches available for each SQL Version. The function then parses the table and converts it into a PSObject, with parameters such as Cumlative Update and Service Pack download links.
+    The function accesses the Microsoft page "https://docs.microsoft.com/en-us/sql/advanced-analytics/install/sql-ml-cab-downloads" which displays the latest R Cab files for patches available for each SQL Version. The function then parses the table and converts it into a PSObject, with parameters such as Cumlative Update and Service Pack download links.
 
     .EXAMPLE
-    PS C:\> Get-SPSqlRCabFile
+    PS C:\> Get-SPSqlMachineLearningCabFile
     
     Returns all available patches from https://docs.microsoft.com/en-us/sql/advanced-analytics/install/sql-ml-cab-downloads in a PSObject
 
