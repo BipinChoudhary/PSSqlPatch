@@ -42,7 +42,7 @@ function Save-SPSqlPatch {
     #>
     [Cmdletbinding()] 
     param(    
-        #The server to be patched.
+        #The server version to download the patches for.
         [string[]] $SqlVersion = @("2008", "2008 R2", "2012", "2014", "2016", "2017", "2019"),
         
         #Directory to download the patch to.

@@ -15,17 +15,22 @@
     If FullDownloadDirectory is specified, it downloads the files directly into that folder instead.
 
     .EXAMPLE
-    PS C:\> Save-SPSqlRCabFile -RootDownloadDirectory "C:\test\patches"
+    PS C:\> Save-SPSqlMLCabFile -RootDownloadDirectory "C:\test\patches"
     
     Downloads the latest available cabs for the default SQL version 2017 into a structured folder layout within "C:\test\patches".
 
     .EXAMPLE
-    PS C:\> Save-SPSqlRCabFile -SqlVersion "2019" -FullDownloadDirectory C:\test\
+    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2019" -FullDownloadDirectory "C:\test\"
 
-    Downloads the latest available cabs for SQL 2019 and places them directly into the C:\test folder. 
+    Downloads the latest available cabs for SQL 2019 and places them directly into the "C:\test" folder. 
 
     .EXAMPLE
-    PS C:\> Save-SPSqlRCabFile -SqlVersion "2019" -RootDownloadDirectory "C:\test\patches"
+    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2017" -CumulativeUpdate CU17 -RootDownloadDirectory "C:\test\patches"
+
+    Downloads the cabs for CU17 for SQL 2017 into a structured folder layout within "C:\test\patches" folder.
+
+    .EXAMPLE
+    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2019" -RootDownloadDirectory "C:\test\patches" -LatestCabOnly:$false
 
     Downloads ALL available cabs for each CU for SQL 2017, into a structured folder layout within "C:\test\patches"
 
@@ -79,7 +84,7 @@
     }
 
     if(!$CUGroups) {
-        Write-Warning "No cab files found for the given search criteria."
+        Write-Warning "No cab files found for the given search criteria. Use Get-SPSqlMLCabFile to list available cab files."
     }
 
     foreach($Group in $CUGroups) {
