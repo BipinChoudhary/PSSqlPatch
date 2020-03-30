@@ -30,9 +30,6 @@
     ## Extract the tables out of the web request
     $tables = @($HTML.getElementsByTagName("table"))
 
-    #Table with the patch info is the first one in the page.
-    #$table = $tables[0]
-
     foreach($table in $tables) {
         $rows = @($table.Rows)
 
@@ -58,10 +55,14 @@
                 }
 
             }
+            elseif($row -like '*Initial Release*') {
+                $CumulativeUpdate = "Initial Release"
+            }
+
 
             if($row -Like '*.cab*') {
                $SplitRow = ($row -split "<TD>" -replace '</TD>').Trim()
-                $SplitRow = $SplitRow | Where-Object {$_} #Remove duplicates
+                $SplitRow = $SplitRow | Where-Object {$_} #Remove empty rows
                 $SecondaryTitle = $SplitRow[0]
 
                 $DownloadInfo = $SplitRow[1]
