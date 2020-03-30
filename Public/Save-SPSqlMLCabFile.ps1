@@ -4,7 +4,7 @@
     This function downloads cab files required for patching Machine Learning services in SQL Server
 
     .DESCRIPTION
-    This function uses the Get-SPSqlMLCabFile function from this Machine Learning Cab files to get the latest available patches for SQL Server. 
+    This function uses the Get-SPSqlMLCabFile function to get the latest available patches for SQL Server. 
     
     If the RootDownloadDirectory is specified, it then uses the DownloadLink property to save the files to a special folder structure;
     - For versions that don't have Service Packs (2017 and newer) 
@@ -46,6 +46,9 @@
         #The cumulative Update to download the cab files for.
         [string] $CumulativeUpdate,
         
+        #The Service Pack to download the cab files for. Only to be used when SqlVersion is 2016.
+        [string] $ServicePack,
+
         #Directory to download the patch to and create the structured sub-folders in. 
         [string] $RootDownloadDirectory,
     
@@ -54,6 +57,10 @@
 
         [switch]$LatestCabOnly=$true
     )
+
+    if($SqlVersion -ne "2016" -and $ServicePack) {
+        Throw "ServicePack can only be specified with SQL Server 2016"
+    }
 
     if($SqlVersion -eq "2016") {
         Write-Warning "Due to the variable CU listings on the MS website for SQL Server 2016 cab files, folder structure may be different."
@@ -83,6 +90,11 @@
         }
     }
 
+    #If user has specified a service pack, we only download files for that one.
+    if($ServicePack) {
+        $CUGroups = $CUGroups | Where-Object {$_.Group.ServicePack -eq $ServicePack}
+    }
+
     if(!$CUGroups) {
         Write-Warning "No cab files found for the given search criteria. Use Get-SPSqlMLCabFile to list available cab files."
     }
@@ -92,6 +104,7 @@
         foreach($CabFile in $Group.Group) {
             $version = $CabFile.SqlVersion
             $CUNumber = $CabFile.CumulativeUpdate
+            $SPNumber = $CabFile.ServicePack
 
             $ShortSqlVersion = ($version -split " ")[2]
 
@@ -104,7 +117,13 @@
             $link = $CabFile.DownloadLink
 
             if(!$FullDownloadDirectory) {
-                $DownloadPath = "$RootDownloadDirectory\SQL $ShortSqlVersion\Patches\$CUNumber\MLCabFiles"
+                if($SPNumber) {
+                    $SPandCUNumber = $SPNumber + $CUNumber
+                    $DownloadPath = "$RootDownloadDirectory\SQL $ShortSqlVersion\Patches\$SPNumber\$SPandCUNumber\$CUNumber\MLCabFiles"                  
+                }
+                else {
+                    $DownloadPath = "$RootDownloadDirectory\SQL $ShortSqlVersion\Patches\$CUNumber\MLCabFiles"
+                }
             }
             else {
                 $DownloadPath = $FullDownloadDirectory
