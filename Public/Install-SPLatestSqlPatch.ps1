@@ -86,7 +86,7 @@ function Install-SPLatestSqlPatch {
 
     # If the user does not pass an instance name, we get the first instance on the server and use that to check patch number.
     if(!$InstanceName) {
-        Write-SPUpdate "No specific instance name given. Getting instance from server" -UpdateType Normal -Logfile $LogFile
+        Write-SPUpdate "No specific instance name given. Getting instance name from server." -UpdateType Normal -Logfile $LogFile
 
         $InstanceList = Get-SPSqlInstanceList $TargetServer -InstanceNamesOnly -RunningOnly
 
