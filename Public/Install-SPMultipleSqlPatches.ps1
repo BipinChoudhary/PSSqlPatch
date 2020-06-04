@@ -141,7 +141,7 @@ function Install-SPMultipleSqlPatches {
 
         Write-SPUpdate "Patching Status" -UpdateType Header -Logfile $PatchingSummaryLogFile
 
-        $SqlExpressCount = 0
+        $AvailabilityGroupCount = 0
         $InaccessibleCount = 0
         $ErrorCount = 0
         $SuccessfulPatchCount = 0
@@ -159,39 +159,39 @@ function Install-SPMultipleSqlPatches {
             
             #Check the log files for error strings.    
             if($LogContent -like '*is down or inaccessible.*') {
-                Write-SPUpdate "$ServerName - Server is down or inaccessible." -UpdateType Error -Logfile $PatchingSummaryLogFile
+                Write-SPUpdate "$ServerName - Server is down or inaccessible." -UpdateType Error -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $InaccessibleCount++
             }
             elseif($LogContent -like '*is in an availability group*') {
-                Write-SPUpdate "$ServerName - Server is in an availablity group and patching should be done manually, so it has been skipped." -UpdateType Warning -Logfile $PatchingSummaryLogFile
-                $SqlExpressCount++
+                Write-SPUpdate "$ServerName - Server is in an availablity group and patching should be done manually, so it has been skipped." -UpdateType Warning -Logfile $PatchingSummaryLogFile -NoTimeStamp
+                $AvailabilityGroupCount++
             } 
             elseif($LogContent -like '*Setup.exe never completed before timeout*') {
-                Write-SPUpdate "$ServerName - Patch setup.exe timed out before completing, check logs." -UpdateType Error -Logfile $PatchingSummaryLogFile
+                Write-SPUpdate "$ServerName - Patch setup.exe timed out before completing, check logs." -UpdateType Error -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $ErrorCount++
             }
             elseif($LogContent -like '*failed to update the shared features*') {
-                Write-SPUpdate "$ServerName - Could not update shared features." -UpdateType Error -Logfile $PatchingSummaryLogFile
+                Write-SPUpdate "$ServerName - Could not update shared features." -UpdateType Error -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $ErrorCount++
             }
             elseif($LogContent -like ("*``[ERROR``]*")) {
-                Write-SPUpdate "$ServerName - Error installing patch, check logs." -UpdateType Error -Logfile $PatchingSummaryLogFile
+                Write-SPUpdate "$ServerName - Error installing patch, check logs." -UpdateType Error -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $ErrorCount++
             }
             elseif($LogContent -like '*successfully installed on*') {
-                Write-SPUpdate "$ServerName - Patched successfully." -UpdateType Success -Logfile $PatchingSummaryLogFile
+                Write-SPUpdate "$ServerName - Patched successfully." -UpdateType Success -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $SuccessfulPatchCount++
             }
             elseif($LogContent -like '*is already installed on*') {
-                Write-SPUpdate "$ServerName - Already patched. No action taken." -UpdateType Success -Logfile $PatchingSummaryLogFile            
+                Write-SPUpdate "$ServerName - Already patched. No action taken." -UpdateType Success -Logfile $PatchingSummaryLogFile -NoTimeStamp        
                 $AlreadyPatchedCount++
             }
             elseif($LogContent -like '*No applicable*were found in*') {
-                Write-SPUpdate "$ServerName - No applicable patches were found in the given patch directory." -UpdateType Warning -Logfile $PatchingSummaryLogFile            
+                Write-SPUpdate "$ServerName - No applicable patches were found in the given patch directory." -UpdateType Warning -Logfile $PatchingSummaryLogFile -NoTimeStamp      
                 $NoApplicablePatchCount++
             }
             else {
-                Write-SPUpdate "$ServerName - Issue with patch. No success string found. Check logfile $LogFilePath" -UpdateType Error -Logfile $PatchingSummaryLogFile
+                Write-SPUpdate "$ServerName - Issue with patch. No success string found. Check logfile $LogFilePath" -UpdateType Error -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $ErrorCount++
             } 
         }   
@@ -207,7 +207,7 @@ function Install-SPMultipleSqlPatches {
         Write-SPUpdate "SuccessfulPatchCount = $SuccessfulPatchCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
         Write-SPUpdate "AlreadyPatchedCount = $AlreadyPatchedCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
         Write-SPUpdate "ErrorCount = $ErrorCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
-        Write-SPUpdate "SQLExpressCount = $SqlExpressCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
+        Write-SPUpdate "AvailabilityGroupCount = $AvailabilityGroupCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
         Write-SPUpdate "InaccessibleCount = $InaccessibleCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
         Write-SPUpdate "NoApplicablePatchCount = $NoApplicablePatchCount" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
 
@@ -217,7 +217,7 @@ function Install-SPMultipleSqlPatches {
         Write-SPUpdate "Total Time Taken : $HoursTaken hours, $MinutesTaken minutes, $SecondsTaken seconds" -UpdateType Normal -Logfile $PatchingSummaryLogFile -NoTimeStamp
 
 
-        Write-SPUpdate "Patching summary located at $PatchingSummaryLogFile" -UpdateType Info -Logfile $PatchingSummaryLogFile
+        Write-SPUpdate "Patching summary located at $PatchingSummaryLogFile" -UpdateType Info -Logfile $PatchingSummaryLogFile -NoTimeStamp
 
         $LogSummaryContent = Get-Content $PatchingSummaryLogFile
 
