@@ -23,8 +23,8 @@ function Install-SPSqlPatchFile {
         [Parameter(ValueFromPipeline, Mandatory)]
         [string] $TargetServer,
 
-        #The instance name to check on the server for current patch level. Note: all SQL isntances on the server will be patched,  this is just for checking the current patch level.
-        [string] $InstanceName = 'MSSQLSERVER',
+        #The instance name to check on the server for current patch level. If not passed it will automatically check an instance on the TargetServer. Note: all SQL isntances on the server will be patched,  this is just for checking the current patch level.
+        [string] $InstanceName,
 
         #Source Patch file. 
         [Parameter(Mandatory)]
@@ -43,6 +43,7 @@ function Install-SPSqlPatchFile {
         if (!(Test-Path $LogFileDirectory)) { mkdir $LogFileDirectory -Force -ErrorAction Stop }   
         $LogDate = Get-Date -UFormat "%Y%m%d_%H%M"
         $LogFile = "$LogFileDirectory\${TargetServer}_${LogDate}.log"
+        Write-SPUpdate "Logfile: $LogFile" -UpdateType Info -Logfile $LogFile
     }
 
     if($SourcePatchFile -notlike '*.exe') {
@@ -52,6 +53,28 @@ function Install-SPSqlPatchFile {
     if(!(Test-Path $SourcePatchFile)) {
         Write-SPUpdate "$SourcePatchFile does not exist or is inaccessible." -UpdateType Error -Logfile $LogFile
         break 0
+    }
+
+    # If the user does not pass an instance name, we get the first instance on the server and use that to check patch number.
+    if(!$InstanceName) {
+        Write-SPUpdate "No specific instance name given. Getting instance name from server." -UpdateType Normal -Logfile $LogFile
+
+        $InstanceList = Get-SPSqlInstanceList $TargetServer -InstanceNamesOnly -RunningOnly
+
+        if(!$InstanceList) {
+            Write-SPUpdate "Could not get instance list on $TargetServer. There are no running instances or server is inaccessible." -UpdateType Error -Logfile $LogFile
+            break 0
+        }
+
+        #If there are more than 1 instances, we use the first one. Otherwise the single instance is used.
+        if($InstanceList.Count -gt 1) {
+            $InstanceName = $InstanceList[0]
+        }
+        else {
+            $InstanceName = $InstanceList
+        }
+
+        Write-SPUpdate "Using instance $InstanceName to check the patch number of the server." -UpdateType Normal -Logfile $LogFile
     }
 
 
