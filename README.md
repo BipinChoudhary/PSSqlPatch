@@ -80,14 +80,13 @@ This function gets relevant patch information for a given *SqlInstance*. It does
 
 ### Usage
 ```powershell
-Get-SPInstancePatchDetails -SqlInstance "SERVER1\SQLTEST01", "SERVER2\SQLTEST02" 
+Get-SPInstancePatchDetails -SqlInstance "SERVER1\SQLTEST01", "SERVER2" 
 ```
 This gets the patch information on the given SQL Server instances.
 
 ### Output
-*I've edited out the servernames slightly in this screenshot*
-![PSSqlPatch](/images/Get-SPInstancePatchDetails_example.png)
-
+*I've edited out the servernames in this screenshot*
+![Get-SPInstancePatchDetails_output](/images/Get-SPInstancePatchDetails_example.png)
 
 
 # Get-SPPatchReport
@@ -101,10 +100,10 @@ This gets the patch information on the given servers, and checks if there is a n
 
 ### Output
 *I've edited out the servernames in this screenshot*
-![PSSqlPatch](/images/Get-SPPatchReport_example.png)
+![Get-SPPatchReport_output](/images/Get-SPPatchReport_example.png)
 
 # Install-SPSqlPatchFile
-This function is used to upload and install a SQL Server patch file on a specified server. The function accepts the *TargetServer* and *SourcePatchFile* parameters. The *InstanceName* is only used to check the current patch level of SQL Server on the *TargetServer*. All instances will be patched. *InstanceName* is optional and an instance on the server will be retrieved automatically if it is not passed to the function. The *SourcePatchFile* is the path to the patch file you want to apply, it can be a local directory in relation to where the script is executed, or a network share. If the target server is on the same or newer patch version than the patch file give, no action will be taken.
+This function is used to upload and install a SQL Server patch file on a specified server. The function accepts the *TargetServer* and *SourcePatchFile* parameters. The *InstanceName* is only used to check the current patch level of SQL Server on the *TargetServer*. All instances will be patched. *InstanceName* is optional and an instance on the server will be retrieved automatically if it is not passed to the function. The *SourcePatchFile* is the path to the patch file you want to apply, it can be a local directory in relation to where the script is executed, or a network share. If the target server is on the same or newer patch version than the patch file given, no action will be taken.
 
 This function digresses from the standard of a PSObject being returned from a function, it instead creates logfiles and outputs messages to the user. By default, logfiles are created in *C:\\Users\\$env:UserName\\AppData\\Local\\PSSqlPatch\\logs\\Install-SPSqlPatchFile*, but the you can specify a different logfile location with *LogFile* parameter.
 
@@ -112,13 +111,13 @@ This function digresses from the standard of a PSObject being returned from a fu
 ```powershell
 Install-SPSqlPatchFile -TargetServer Server1 -SourcePatchFile "C:\SqlPatches\SQL 2017\CU20\SQLServer2017-KB4541283-x64.exe"
 ```
-This will check an automatically retrived instance on *Server1* for the patch level of the server. It then checks the patch level of the given patch file. If the server is on a lower patch level than the given patch, the file will be uploaded and applied. The server will be rebooted before (if required) and after the patch is applied.
+This will check an automatically retrieved instance on *Server1* for the patch level of the server. It then checks the patch level of the given patch file. If the server is on a lower patch level than the given patch, the file will be uploaded and applied. The server will be rebooted before (if required) and after the patch is applied.
 
 ### Output
 *I've edited out the servername in this screenshot*
-![PSSqlPatch](/images/Install-SPSqlPatchFile_example.png)
+![Install-SPSqlPatchFile_output](/images/Install-SPSqlPatchFile_example.png)
 
-In the above example, the *-Force* switch was not passed, so the user is prompted to confirm the server restart. It also shows how the SQL Server patch log is checked to ensure there were no issues, and finally the instance patch level is checked again to ensure it matches the patch file.
+In the above example, the *-Force* switch was not passed, so the user is prompted to confirm the server restart. It also shows how the SQL Server patch log is checked to ensure there were no issues, and finally the instance patch level is checked again to ensure it matches the patch file. The function also removes the patch file if patching was successful. If there was an issue with the patch, it will leave the patch file on the server, so you can do the patching manually or retry the function without having to upload the patch again.
 
 # Install-SPLatestSqlPatch
 This function uses a *PatchFileDirectory* or a *PatchFileObject* to determine the latest applicable SQL Server patch for a given TargetServer. It uses the **Get-SPPatchFileInfo** and **Install-SPSqlPatchFile** functions to do this. If the *PatchFileDirectory* parameter is passed, the function will use **Get-SPPatchFileInfo** with that directory to get the patch file object, which will then be used to check for the latest applicable patch. Alternatively, you can pass the object returned by **Get-SPPatchFileInfo** directly to the function using the *PatchFileObject* parameter. 
@@ -128,8 +127,13 @@ This function uses a *PatchFileDirectory* or a *PatchFileObject* to determine th
 Install-SPLatestSqlPatch -TargetServer Server1 -PatchFileDirectory "C:\sqlPatches"
 ```
 
-This will check an automatically retrived instance on *Server1* for the patch level of the server. It then scans the PatchFileDirectory for the latest patch available for the target server SQL Server version. If the server is on a lower patch level than the latest available patch, the file will be uploaded and applied. The server will be rebooted before (if required) and after the patch is applied.
+This will check an automatically retrieved instance on *Server1* for the patch level of the server. It then scans the PatchFileDirectory for the latest patch available for the target server SQL Server version. If the server is on a lower patch level than the latest available patch, the file will be uploaded and applied. The server will be rebooted before (if required) and after the patch is applied.
 
+### Output
+The output below shows the function searching for the latest applicable patch for the given server, and then checking to see if it's already been applied. In this case it has been, so no action has been carried out. The output of the actual patching process can be seen in the output example of **Install-SPSqlPatchFile** above.
+
+*Again, I've edited out the server name here*
+![Install-SPLatestSqlPatch_output](/images/Install-SPLatestSqlPatch_example.png)
 
 
 # Install-SPMultipleSqlPatches
