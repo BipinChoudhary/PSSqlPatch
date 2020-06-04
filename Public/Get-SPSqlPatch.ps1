@@ -25,7 +25,7 @@ function Get-SPSqlPatch {
     #>
 	[Cmdletbinding()] 
     param(
-        [string] $SqlVersion
+        [string[]] $SqlVersion
     )
 
     $browser = New-Object System.Net.WebClient
@@ -93,8 +93,12 @@ function Get-SPSqlPatch {
     } 
 
     if($SqlVersion) {
-        return $LatestPatches | Where-Object ProductVersions -like "*$SqlVersion"
+        foreach($version in $SqlVersion) {
+            $LatestPatches | Where-Object ProductVersions -like "*$version"
+        }
     }
 
-    return $LatestPatches
+    else {
+        return $LatestPatches
+    }
 }
