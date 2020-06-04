@@ -15,7 +15,7 @@ PowerShell module used for everything related to SQL Server patching. It contain
 
 
 ### Get-SPSqlPatch
-Uses the Microsoft page https://technet.microsoft.com/en-us/library/ff803383.aspx to check for new SQL Server updates and returns it in a PSObject.
+Uses the Microsoft page https://technet.microsoft.com/en-us/library/ff803383.aspx to check for new SQL Server updates and returns it in a PSObject, with members such as Cumlative Update and Service Pack download links.
 
 ### Save-SPSqlPatch
 Uses the output from **Get-SPSqlPatch** to download the latest SQL Server updates and save them in a structured folder layout. The *DownloadDirectory* parameter is mandatory, this is where the files are downloaded to. User can specify the *SqlVersion* to download the patch for. If not specified it downloads the latest available patch for every SQL Server version. The folder structure it creates is;
@@ -27,7 +27,7 @@ Uses the output from **Get-SPSqlPatch** to download the latest SQL Server update
 If you do not want to create the folder structure, you can use the *DoNotCreateFolderStructure* switch, and the file will be downloaded directly to the *DownloadDirectory*.
 
 ### Get-SPSqlMLCabFile
-Uses the Microsoft page https://docs.microsoft.com/en-us/sql/advanced-analytics/install/sql-ml-cab-downloads which displays the cab files required to patch the Machine Learning services of SQL Server. The function then parses the page for cab files and converts it into a PSObject, with members such as Cumlative Update and Service Pack download links.
+Uses the Microsoft page https://docs.microsoft.com/en-us/sql/advanced-analytics/install/sql-ml-cab-downloads which displays the cab files required to patch the Machine Learning services of SQL Server. The function then parses the page for cab files and converts it into a PSObject, with members such as SQLVersion, ServicePack and CumulativeUpdate that the cab file is for, and a DownLoadLink for the cab file.
 
 ### Save-SPSqlMLCabFile
 This function uses the **Get-SPSqlMLCabFile** function to download the Machine Learning cab files and save them in a structured folder layout. User can specify the *SQLVersion* or *CumulativeUpdate* to download the cab files for. The files are downloaded into the following folder structure;
