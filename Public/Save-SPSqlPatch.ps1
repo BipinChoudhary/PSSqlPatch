@@ -6,9 +6,9 @@ function Save-SPSqlPatch {
     .DESCRIPTION
     This function uses the Get-SPSqlPatch function from this module to get the latest available patches for SQL Server. It then gets the KB number from the resultset, and uses the Save-KBFile function to download the latest Service Pack and/or Cumulative Update, into a special folder structure within $DownloadDirectory. The folder structure is;
     - For versions that don't have Service Packs (2017 and newer) 
-      - $DownloadDirectory\SQL $SqlVersion\Patches\$CUNumber
+      - $DownloadDirectory\SQL $SqlVersion\$CUNumber
     - For versions that have Service Packs (2016 and older) 
-      - $DownloadDirectory\SQL $SqlVersion\Patches\$SPNumber\$SPandCUName
+      - $DownloadDirectory\SQL $SqlVersion\$SPNumber\$SPandCUName
 
     .PARAMETER SqlVersion
     Version of SQL to check and download patches for.
@@ -20,12 +20,12 @@ function Save-SPSqlPatch {
     Minimum age of the patch before it's downloaded.
 
     .EXAMPLE
-    PS C:\> Save-SPSqlPatch -DownloadDirectory C:\SqlPatches\
+    PS C:\> Save-SPSqlPatch -DownloadDirectory "C:\SqlPatches\"
     
     This will download all of the latest SQL Server patches for every version into "C:\SqlPatches\", 2008 and up.
 
     .EXAMPLE
-    PS C:\> Save-SPSqlPatch -DownloadDirectory C:\SqlPatches\ -PatchAge 28
+    PS C:\> Save-SPSqlPatch -DownloadDirectory "C:\SqlPatches\" -PatchAge 28
     
     This will download all of the latest SQL Server patches for every version, but only downloads the patch if it's older than 28 days.
 
@@ -42,14 +42,17 @@ function Save-SPSqlPatch {
     #>
     [Cmdletbinding()] 
     param(    
-        #The server version to download the patches for.
-        [string[]] $SqlVersion = @("2008", "2008 R2", "2012", "2014", "2016", "2017", "2019"),
-        
         #Directory to download the patch to.
+        [Parameter(Mandatory)]
         [string] $DownloadDirectory,
 
+        #The server version(s) to download the patches for.
+        [string[]] $SqlVersion = @("2008", "2008 R2", "2012", "2014", "2016", "2017", "2019"),
+
         #Minimum age in days the patch needs to be to download.
-        [int]$PatchAge = 0
+        [int]$PatchAge = 0,
+
+        [switch] $DoNotCreateFolderStructure
     )
 
     #Setup proxy credentials in case they're needed.
@@ -114,7 +117,12 @@ function Save-SPSqlPatch {
 
             #SQL 2017 and up do not have SPs
             if($SqlVersion -ge 2017) {
-                $CUDownloadDirectory = "$DownloadDirectory\SQL $SqlVersion\Patches\$CUNumber"
+                if($DoNotCreateFolderStructure) {
+                    $CUDownloadDirectory = "$DownloadDirectory"
+                }
+                else {
+                    $CUDownloadDirectory = "$DownloadDirectory\SQL $SqlVersion\$CUNumber"
+                }
             }
 
             #Else we check for SP files and download the latest.
@@ -132,7 +140,14 @@ function Save-SPSqlPatch {
 
                     Write-Verbose "Downloading $SPNumber for SQL $SqlVersion"
 
-                    $SPDownloadDirectory = "$DownloadDirectory\SQL $SqlVersion\Patches\$SPNumber\"
+                    if($DoNotCreateFolderStructure) {
+                        $SPDownloadDirectory = "$DownloadDirectory"
+                    }
+                    else {
+                        $SPDownloadDirectory = "$DownloadDirectory\SQL $SqlVersion\$SPNumber\"
+                    }
+
+
                     if(!(Test-Path $SPDownloadDirectory)) {mkdir $SPDownloadDirectory -Force | Out-Null}
 
                     $DownloadOutput = @()

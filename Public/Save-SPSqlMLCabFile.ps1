@@ -6,18 +6,18 @@
     .DESCRIPTION
     This function uses the Get-SPSqlMLCabFile function to get the latest available patches for SQL Server. 
     
-    If the RootDownloadDirectory is specified, it then uses the DownloadLink property to save the files to a special folder structure;
+    If the DoNotCreateFolderStructure is not set, it then uses the DownloadLink property to save the files to a special folder structure;
     - For versions that don't have Service Packs (2017 and newer) 
-      - $RootDownloadDirectory\SQL $SqlVersion\Patches\$CUNumber\MLCabFiles
+      - $DownloadDirectory\SQL $SqlVersion\$CUNumber\MLCabFiles
     - For versions that have Service Packs (2016 and older) 
-      - $RootDownloadDirectory\SQL $SqlVersion\Patches\$SPNumber\$SPandCUName\MLCabFiles
+      - $DownloadDirectory\SQL $SqlVersion\$SPNumber\$SPandCUName\MLCabFiles
 
     If FullDownloadDirectory is specified, it downloads the files directly into that folder instead.
 
     .EXAMPLE
-    PS C:\> Save-SPSqlMLCabFile -RootDownloadDirectory "C:\test\patches"
+    PS C:\> Save-SPSqlMLCabFile -RootDownloadDirectory "C:\SqlPatches"
     
-    Downloads the latest available cabs for the default SQL version 2017 into a structured folder layout within "C:\test\patches".
+    Downloads the latest available cabs for the default SQL version 2017 into a structured folder layout within "C:\SqlPatches".
 
     .EXAMPLE
     PS C:\> Save-SPSqlMLCabFile -SqlVersion "2019" -FullDownloadDirectory "C:\test\"
@@ -25,14 +25,14 @@
     Downloads the latest available cabs for SQL 2019 and places them directly into the "C:\test" folder. 
 
     .EXAMPLE
-    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2017" -CumulativeUpdate CU17 -RootDownloadDirectory "C:\test\patches"
+    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2017" -CumulativeUpdate CU17 -RootDownloadDirectory "C:\SqlPatches"
 
-    Downloads the cabs for CU17 for SQL 2017 into a structured folder layout within "C:\test\patches" folder.
+    Downloads the cabs for CU17 for SQL 2017 into a structured folder layout within "C:\SqlPatches" folder.
 
     .EXAMPLE
-    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2019" -RootDownloadDirectory "C:\test\patches" -LatestCabOnly:$false
+    PS C:\> Save-SPSqlMLCabFile -SqlVersion "2019" -RootDownloadDirectory "C:\SqlPatches" -LatestCabOnly:$false
 
-    Downloads ALL available cabs for each CU for SQL 2017, into a structured folder layout within "C:\test\patches"
+    Downloads ALL available cabs for each CU for SQL 2017, into a structured folder layout within "C:\SqlPatches"
 
     .NOTES
     Author: Patrick Cull
@@ -40,21 +40,25 @@
     #>
     [Cmdletbinding()] 
     param(    
+
+        #Directory to download the cab file to.
+        [Parameter(Mandatory)]
+        [string]$DownloadDirectory,
+
         #The SQL version download the files for.
-        [string] $SqlVersion = "2017",
+        [ValidateRange(2016,2100)]
+        [int] $SqlVersion,
 
         #The cumulative Update to download the cab files for.
         [string] $CumulativeUpdate,
         
-        #The Service Pack to download the cab files for. Only to be used when SqlVersion is 2016.
+        #The Service Pack to download the cab files for. Only to be used when SqlVersion is 2016 (SQL Server older than 2016 do not have Machine Learning cab files, newer has no CumulativeUpdate)
         [string] $ServicePack,
 
-        #Directory to download the patch to and create the structured sub-folders in. 
-        [string] $RootDownloadDirectory,
-    
-        #Full Directory to download the cab files to. Using this option will prevent the function creating the structured subfolders automatically. 
-        [string]$FullDownloadDirectory,
+        [switch] $DoNotCreateFolderStructure,
 
+
+        #By default it will only download the latest cab file. IF this is set to false it will download every cab file available.
         [switch]$LatestCabOnly=$true
     )
 
@@ -62,8 +66,8 @@
         Throw "ServicePack can only be specified with SQL Server 2016"
     }
 
-    if($SqlVersion -eq "2016") {
-        Write-Warning "Due to the variable CU listings on the MS website for SQL Server 2016 cab files, folder structure may be different."
+    if($SqlVersion -eq "2016" -and !$DoNotCreateFolderStructure) {
+        Write-Warning "Due to the variable CU listings on the MS website for SQL Server 2016 cab files, folder structure may be different. e.g. One instance of the CU column is 'CU1-CU5' so a folder with that name will be created. "
     }
 
     #Setup proxy credentials in case they're needed.
@@ -116,17 +120,17 @@
             $FileName = $CabFile.CabName
             $link = $CabFile.DownloadLink
 
-            if(!$FullDownloadDirectory) {
+            if(!$DoNotCreateFolderStructure) {
                 if($SPNumber) {
                     $SPandCUNumber = $SPNumber + $CUNumber
-                    $DownloadPath = "$RootDownloadDirectory\SQL $ShortSqlVersion\Patches\$SPNumber\$SPandCUNumber\$CUNumber\MLCabFiles"                  
+                    $DownloadPath = "$DownloadDirectory\SQL $ShortSqlVersion\$SPNumber\$SPandCUNumber\$CUNumber\MLCabFiles"                  
                 }
                 else {
-                    $DownloadPath = "$RootDownloadDirectory\SQL $ShortSqlVersion\Patches\$CUNumber\MLCabFiles"
+                    $DownloadPath = "$DownloadDirectory\SQL $ShortSqlVersion\$CUNumber\MLCabFiles"
                 }
             }
             else {
-                $DownloadPath = $FullDownloadDirectory
+                $DownloadPath = $DownloadDirectory
             }
 
             $FilePath = "$DownloadPath\$FileName"
@@ -156,7 +160,7 @@
             }
 
             [PSCustomObject][Ordered] @{
-                SqlVersion = "SQL $ShortSqlVersion"
+                SqlVersion = $version
                 CumulativeUpdate = $CUNumber
                 FilePath = $FilePath
                 DownloadStatus = $DownloadStatus

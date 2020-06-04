@@ -56,7 +56,7 @@
 
             }
             elseif($row -like '*Initial Release*') {
-                $CumulativeUpdate = "Initial Release"
+                $CumulativeUpdate = $null
             }
 
 
