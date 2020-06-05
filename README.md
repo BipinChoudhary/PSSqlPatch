@@ -1,5 +1,11 @@
 ![PSSqlPatch](/images/PSSqlPatch_logo.PNG)
-PowerShell module used for everything related to SQL Server patching. It contains functions to check for and download SQL patches directly from Microsoft, as well as functions to apply the patches and check patch levels. The functions that access servers require admin access on the remote server, and that the server drives are accessible via UNC. *(i.e. \\\\Servername\\d$\\foldername\ )*
+PSSqlPatch is a PowerShell module used for everything related to SQL Server patching. It contains functions to check for and download SQL patches directly from Microsoft, as well as functions to apply the patches and check patch levels. The functions that access servers require admin access on the remote server, and that the server drives are accessible via UNC. *(i.e. \\\\Servername\\d$\\foldername\ )*
+
+# Installation
+Run the following command to install PSSqlPatch from the PowerShell Gallery:
+```powershell
+Install-Module PSSqlPatch
+```
 
 # Functions
 * [Get-SPSqlPatch](#get-spsqlpatch)
