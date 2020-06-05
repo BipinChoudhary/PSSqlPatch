@@ -123,29 +123,6 @@ function Install-SPSqlPatchFile {
         Write-SPUpdate "Newer patch is already installed on $TargetInstance" -UpdateType Success -Logfile $LogFile
     }
     else {
-
-        # Check server has enough space for the patch.
-        $PatchFileSizeGB = $PatchFileInfo.PatchFileSizeMB/1024
-    
-        $DriveWithEnoughSpace = Get-SPDriveWithSpace -TargetServer $TargetServer -SpaceNeededGB $PatchFileSizeGB
-    
-        if($DriveWithEnoughSpace) {
-            $TargetDrive = $DriveWithEnoughSpace[0]
-            Write-SPUpdate "Using the $TargetDrive drive to upload the patch to." -UpdateType Normal -Logfile $LogFile
-        }
-        else {
-            Write-SPUpdate "Target does not have enough space on any drive for the patch." -UpdateType Error -Logfile $LogFile
-            break
-        }
-
-        # Set file and folder path for patch installer .exe
-        $PatchFilesDestination = "\\$TargetServer\${TargetDrive}`$\Sources\Patches\$PatchFileFolderName"
-
-        $NetworkFilePath = "$PatchFilesDestination\$PatchFileName"
-        
-        $LocalFilePath = "${TargetDrive}:\Sources\Patches\$PatchFileFolderName\$PatchFileName"
-        $ExtractFolder = "${TargetDrive}:\Sources\Patches\$PatchFileFolderName\Extracted"
-
         #Check if the instance is in a high availability group - these need to be done manually.
         $TargetAvailabilityGroups = Invoke-Command -ComputerName $TargetServer -ScriptBlock {
             [Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.Smo") | Out-Null  
@@ -165,8 +142,6 @@ function Install-SPSqlPatchFile {
             $TargetAvailabilityGroups | Format-Table | Out-String | Write-SPUpdate -Logfile $LogFile -NoTimeStamp
             break 0
         }
-
-        if (!(Test-Path $PatchFilesDestination)) { mkdir $PatchFilesDestination -Force}
 
         #Check if reboot needs to be done before carring out the patch
         $IsRebootPending = (Get-PendingReboot $TargetServer).RebootPending
@@ -233,6 +208,33 @@ function Install-SPSqlPatchFile {
                 break 0
             }
         }
+
+        # Check server has enough space for the patch.
+        $PatchFileSizeGB = $PatchFileInfo.PatchFileSizeMB/1024
+        $DriveWithEnoughSpace = Get-SPDriveWithSpace -TargetServer $TargetServer -SpaceNeededGB $PatchFileSizeGB
+    
+        if($DriveWithEnoughSpace) {
+            $TargetDrive = $DriveWithEnoughSpace[0]
+            Write-SPUpdate "Using the $TargetDrive drive to upload the patch to." -UpdateType Normal -Logfile $LogFile
+        }
+        else {
+            Write-SPUpdate "Target does not have enough space on any drive for the patch." -UpdateType Error -Logfile $LogFile
+            break
+        }
+
+        if(!(Test-Path "\\$TargetServer\\${TargetDrive}`$\")) {
+            Write-SPUpdate "Target drive is inaccessible via UNC i.e. \\$TargetServer\\${TargetDrive}`$\ - Patch cannot be uploaded." -UpdateType Error -Logfile $LogFile
+            break
+        }
+
+        # Set file and folder path for patch installer .exe
+        $PatchFilesDestination = "\\$TargetServer\${TargetDrive}`$\SqlPatches\$PatchFileFolderName"
+        $NetworkFilePath = "$PatchFilesDestination\$PatchFileName"
+        
+        $LocalFilePath = "${TargetDrive}:\SqlPatches\$PatchFileFolderName\$PatchFileName"
+        $ExtractFolder = "${TargetDrive}:\SqlPatches\$PatchFileFolderName\Extracted"
+
+        if (!(Test-Path $PatchFilesDestination)) { mkdir $PatchFilesDestination -Force}     
         
         #If patch file is not there upload it.
         if (!(Test-Path $NetworkFilePath)) {
@@ -283,13 +285,15 @@ function Install-SPSqlPatchFile {
             $Parms = "/q", "/IAcceptSQLServerLicenseTerms", "/Action=Patch", "/AllInstances"
             & ".\setup.exe" $Parms | Out-Null
             Write-Output "Setup.exe completed."
-        }
+        } | Select-Object Name, JobStateInfo, PSBeginTime, PSEndTime
 
         #Timeout after an hour (3600 seconds)
-        Wait-Job -Name $InstallPatchJobName -Timeout 3600
+        Wait-Job -Name $InstallPatchJobName -Timeout 3600 | Select-Object Name, JobStateInfo, PSBeginTime, PSEndTime
         Stop-Job -Name $InstallPatchJobName
         
-        $SetupJobOutput = Receive-Job -Name $InstallPatchJobName
+        $SetupJobOutput = Receive-Job -Name $InstallPatchJobName 
+
+        Remove-Job -Name $InstallPatchJobName
 
         #If the setup.exe completed, this string will be found in the job output. Provide the user with a snippet of the summary log, which is updated after the setup.exe completes.
         if($SetupJobOutput -like '*Setup.exe completed.*') {
@@ -327,14 +331,10 @@ function Install-SPSqlPatchFile {
 
         if ($PatchFileVersion -eq $InstancePatchLevel) {
             Write-SPUpdate "Latest patch $PatchFileName successfully installed on $TargetInstance" -UpdateType Success -Logfile $LogFile
-            ($InstancePatchDetails | Format-Table | Out-String).Trim() | Write-SPUpdate -Logfile $Logfile
+            ($InstancePatchDetails | Out-String).Trim() | Write-SPUpdate -Logfile $Logfile
 
-            Write-SPUpdate "Removing extracted patch folder..." -UpdateType Normal -Logfile $LogFile
-            $NetworkExtractFolder = "\\$TargetServer\" + ($ExtractFolder -replace ':', '$')
-            Remove-Item $NetworkExtractFolder -Recurse
-
-            Write-SPUpdate "Removing patch .exe file..." -UpdateType Normal -Logfile $LogFile
-            Remove-Item $NetworkFilePath
+            Write-SPUpdate "Removing patch files and folder..." -UpdateType Normal -Logfile $LogFile
+            Remove-Item $PatchFilesDestination -Recurse
         }
         else {
             Write-SPUpdate "Patch was not installed. You may need to do it manually. Run $LocalFilePath on the server." -UpdateType Error -Logfile $LogFile

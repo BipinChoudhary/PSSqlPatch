@@ -158,7 +158,7 @@ function Install-SPMultipleSqlPatches {
             $ServerName = ($LogFileName -split '_')[0]
             
             #Check the log files for error strings.    
-            if($LogContent -like '*is down or inaccessible.*') {
+            if($LogContent -like '*inaccessible.*') {
                 Write-SPUpdate "$ServerName - Server is down or inaccessible." -UpdateType Error -Logfile $PatchingSummaryLogFile -NoTimeStamp
                 $InaccessibleCount++
             }
