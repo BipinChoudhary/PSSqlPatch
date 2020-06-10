@@ -29,6 +29,9 @@ Get-SPSqlPatch -SqlVersion "2017", "2016"
 ```
 Will return the latest available patches for SQL Server 2017 and SQL Server 2016.
 
+### Output
+![Get-SPSqlPatch example](/images/Get-SPSqlPatch_example.png)
+
 # Save-SPSqlPatch
 Uses the output from **Get-SPSqlPatch** to download the latest SQL Server updates and save them in a structured folder layout. The *DownloadDirectory* parameter is mandatory, this is where the files are downloaded to. User can specify the *SqlVersion* to download the patch for. If not specified it downloads the latest available patch for every SQL Server version. The folder structure it creates is;
 * For versions that don't have Service Packs (2017 and newer) 
@@ -44,6 +47,10 @@ Save-SPSqlPatch -SqlVersion "2017", "2016" -DownloadDirectory "C:\SqlPatches"
 ```
 This will download the latest available Service Packs and Cumulative Updates for SQL Server 2019, 2017 and 2016. if *SqlVersion* is not set the function will download the latest patch for every SQL Server version.
 
+### Output
+In the following example, the latest CU for SQL Server 2017 is already downloaded, so it's skipped. But the latest SP and CU have not been downloaded yet, so the download is started for both of those files. The function returns the location of the files downloaded. As you can see, the aforementioned structured directories are created as well.
+![Save-SPSqlPatch example](/images/Save-SPSqlPatch_example.png)
+
 # Get-SPSqlMLCabFile
 Uses the Microsoft page https://docs.microsoft.com/en-us/sql/advanced-analytics/install/sql-ml-cab-downloads which displays the cab files required to patch the Machine Learning services of SQL Server. The function then parses the page for cab files and converts it into a PSObject, with members such as SQLVersion, ServicePack and CumulativeUpdate that the cab file is for, and a DownLoadLink for the cab file.
 
@@ -52,6 +59,11 @@ Uses the Microsoft page https://docs.microsoft.com/en-us/sql/advanced-analytics/
 Get-SPSqlMLCabFile
 ```
 Returns all cab files listed on the Microsoft page.
+
+### Output
+The function does not accept parameters, so the returned object should be filtered as needed.
+![Get-SPSqlMLCabFile example](/images/Get-SPSqlMLCabFile_example.png)
+
 
 # Save-SPSqlMLCabFile
 This function uses the **Get-SPSqlMLCabFile** function to download the Machine Learning cab files and save them in a structured folder layout. User can specify the *SQLVersion* or *CumulativeUpdate* to download the cab files for. The files are downloaded into the following folder structure;
@@ -64,9 +76,12 @@ If you do not want to create the folder structure, you can use the *DoNotCreateF
 
 ### Usage
 ```powershell
-Save-SPSqlMLCabFile -SqlVersion "2017" -CumulativeUpdate CU17 -DownloadDirectory "C:\SqlPatches"
+Save-SPSqlMLCabFile -SqlVersion "2017" -CumulativeUpdate CU19 -DownloadDirectory "C:\SqlPatches"
 ```
-Downloads the cabs for CU17 for SQL 2017 into a structured folder layout within "C:\SqlPatches" folder.
+Downloads the cabs for CU19 for SQL 2017 into a structured folder layout within "C:\SqlPatches" folder. Make sure the CumulativeUpdate given has CAB files available, or this function will return an error.
+
+### Output 
+![Save-SPSqlMLCabFile_example example](/images/Save-SPSqlMLCabFile_example.png)
 
 
 # Get-SPPatchFileInfo
