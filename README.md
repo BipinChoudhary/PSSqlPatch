@@ -21,7 +21,7 @@ Install-Module PSSqlPatch
 
 
 # Get-SPSqlPatch
-Uses the Microsoft page https://technet.microsoft.com/en-us/library/ff803383.aspx to check for new SQL Server updates and returns it in a PSObject, with members such as Cumlative Update and Service Pack download links.
+The function accesses a google excel sheet provided by "https://sqlserverbuilds.blogspot.com" which contains a list of all SQL Server patches available for each SQL Version. The function then parses the result and converts it into a PSObject, with parameters such as Cumlative Update and Service Pack download links.
 
 ### Usage
 ```powershell
