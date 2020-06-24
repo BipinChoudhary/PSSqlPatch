@@ -110,7 +110,7 @@ function Save-KBFile {
                 }
 
                 foreach ($link in $links) {
-                    $link.matches.value
+                    $link.matches.value | Where-Object {$_ -like '*x64*exe'}
                 }
             }
         }
