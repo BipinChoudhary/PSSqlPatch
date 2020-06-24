@@ -95,7 +95,7 @@ function Install-SPSqlPatchFile {
     # Test the server is accessible.
     if (!(Test-Connection -ComputerName $TargetServer -Count 1)) {
         Write-SPUpdate "$TargetServer does not exist or is inaccessible. Check spelling and retry." -UpdateType Error -Logfile $LogFile
-        break
+        break 0 
     }   
     
     #Remove the .exe part of the file name to be used for folder naming.
@@ -162,7 +162,7 @@ function Install-SPSqlPatchFile {
             catch {
                 Write-SPUpdate  "$TargetServer could not be rebooted. Do it manually then rerun this script, or the following command:" -UpdateType Error -Logfile $LogFile
                 Write-SPUpdate  "Install-SPSqlPatchFile -TargetServer $TargetServer -InstanceName $InstanceName -SourcePatchFile $SourcePatchFile" -UpdateType Normal -Logfile $LogFile
-                break
+                break 0
             }
         }
 
@@ -219,12 +219,12 @@ function Install-SPSqlPatchFile {
         }
         else {
             Write-SPUpdate "Target does not have enough space on any drive for the patch." -UpdateType Error -Logfile $LogFile
-            break
+            break 0
         }
 
         if(!(Test-Path "\\$TargetServer\\${TargetDrive}`$\")) {
             Write-SPUpdate "Target drive is inaccessible via UNC i.e. \\$TargetServer\\${TargetDrive}`$\ - Patch cannot be uploaded." -UpdateType Error -Logfile $LogFile
-            break
+            break 0
         }
 
         # Set file and folder path for patch installer .exe
@@ -245,7 +245,7 @@ function Install-SPSqlPatchFile {
 
             if (!(Test-Path $NetworkFilePath)) { 
                 Write-SPUpdate "Issue uploading the patch file to $NetworkFilePath. View logs and re-run script or install the patch manually." -UpdateType Error -Logfile $LogFile
-                break
+                break 0 
             }
             else {
                 Write-SPUpdate "Patch uploaded successfully" -UpdateType Success -Logfile $LogFile
@@ -338,7 +338,7 @@ function Install-SPSqlPatchFile {
         }
         else {
             Write-SPUpdate "Patch was not installed. You may need to do it manually. Run $LocalFilePath on the server." -UpdateType Error -Logfile $LogFile
-            break
+            break 0 
         }            
 
         Write-SPUpdate "Server needs to be rebooted after the SQLServer patch install. Doing this now..." -UpdateType Normal -Logfile $LogFile
@@ -350,7 +350,7 @@ function Install-SPSqlPatchFile {
     
         catch {
             Write-SPUpdate  "$TargetServer could not be rebooted after the patch install. You mau have to do it manually. " -UpdateType Error -Logfile $LogFile
-            break
+            break 0 
         }
         
     }
