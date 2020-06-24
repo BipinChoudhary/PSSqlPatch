@@ -1,4 +1,4 @@
-function Get-SPSqlPatchv3 {
+function Get-SPSqlPatch {
     <#
     .SYNOPSIS
     This function is used to get SQL Server patches info and return it as a PSObject
