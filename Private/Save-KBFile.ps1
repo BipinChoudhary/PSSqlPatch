@@ -159,13 +159,21 @@ function Save-KBFile {
                             catch {
                                 return "CantConnectToDownloadWebsite", $FilePath
                             }
-                            #Start-BitsTransfer -Source $link -Destination $file
-                            Write-Progress -Activity "Downloading $FilePath" -Id 1
-                            (New-Object Net.WebClient).DownloadFile($link, $file)
-                            Write-Progress -Activity "Downloading $FilePath" -Id 1 -Completed
-
+                            try {
+                                Start-BitsTransfer -Source $link -Destination $file -DisplayName "Downloading $filepath to $path"
+                            }
+                            catch {
+                                Write-Verbose "Start-BitsTransfer failed trying DownloadFile method instead."
+                                Write-Progress -Activity "Downloading $FilePath to $path" -Id 1
+                                (New-Object Net.WebClient).DownloadFile($link, $file)
+                                Write-Progress -Activity "Downloading $FilePath" -Id 1 -Completed
+                            }
+                            
                             if (Test-Path -Path $file) {
                                 return "DownloadedSucessfully", $FilePath
+                            }
+                            else {
+                                return "Error", $FilePath                                
                             }
                         }
                 }
