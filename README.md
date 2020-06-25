@@ -45,10 +45,10 @@ If you do not want to create the folder structure, you can use the *DoNotCreateF
 ```powershell
 Save-SPSqlPatch -SqlVersion "2017", "2016" -DownloadDirectory "C:\SqlPatches"
 ```
-This will download the latest available Service Packs and Cumulative Updates for SQL Server 2019, 2017 and 2016. if *SqlVersion* is not set the function will download the latest patch for every SQL Server version.
+This will download the latest available Service Packs and Cumulative Updates for SQL Server 2017 and 2016. if *SqlVersion* is not set the function will download the latest patch for every SQL Server version.
 
 ### Output
-In the following example, the latest CU for SQL Server 2017 is already downloaded, so it's skipped. But the latest SP and CU have not been downloaded yet, so the download is started for both of those files. The function returns the location of the files downloaded. As you can see, the aforementioned structured directories are created as well.
+In the following example, the latest CU for SQL Server 2017 is already downloaded, so it's skipped. But the latest SP and CU for SQL Server 2016 have not been downloaded yet, so the download is started for both of those files. The function returns the location of the files downloaded. As you can see, the aforementioned structured directories are created as well.
 ![Save-SPSqlPatch example](/images/Save-SPSqlPatch_example.png)
 
 # Get-SPSqlMLCabFile
