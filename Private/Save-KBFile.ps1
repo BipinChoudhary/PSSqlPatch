@@ -172,26 +172,32 @@ function Save-KBFile {
                                
                                 while ($BitsJob.JobState -eq "Transferring" -or $BitsJob.JobState -eq "Connecting"  -and $BitsPctComplete -ne 100){                                    
                                     $BitsPctComplete = ($BitsJob.BytesTransferred / $BitsJob.BytesTotal)*100
-                                    Write-Progress -PercentComplete $BitsPctComplete -Id 1 -Activity "Downloading $FilePath $BitsPctComplete % complete"
+
+                                    $PctCompleteForDisplay = [math]::Round($BitsPctComplete)
+                                    
+                                    Write-Progress -PercentComplete $BitsPctComplete -Id 1 -Activity "Downloading $FilePath to $path" -Status "${PctCompleteForDisplay}% complete"
                                     
                                     if($BitsJob.JobState -eq "Error") {
                                         Throw "Error with BitsTransfer"
                                     }
 
-                                    Start-Sleep 5
+                                    Start-Sleep 0.1
                                 } 
                             }
-
+                            
+                            #If BitsTransfer fails, try DownloadFile instead.
                             catch {
                                 Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer      
                                 
                                 Write-Verbose "Start-BitsTransfer failed trying DownloadFile method instead."
-                                Write-Progress -Activity "Downloading $filepath to $path" -Completed
 
                                 Write-Progress -Activity "Downloading $FilePath to $path" -Id 1
-                                #(New-Object Net.WebClient).DownloadFile($link, $file)
-                                Start-sleep 5
+                                (New-Object Net.WebClient).DownloadFile($link, $file)
                                 Write-Progress -Activity "Downloading $FilePath" -Id 1 -Completed
+                            }
+                            #cleanup in case BitsTransfer stopped mid download.
+                            finally {
+                                Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer
                             }
                             
                             if (Test-Path -Path $file) {
@@ -206,4 +212,4 @@ function Save-KBFile {
             }
         }
     }
-}
+} 
