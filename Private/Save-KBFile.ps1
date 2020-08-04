@@ -152,20 +152,45 @@ function Save-KBFile {
                             return "AlreadyDownloaded", $FilePath
                         }
                         else {
-
+                            #Test connection to website.
                             try {
                                 Invoke-WebRequest "http://download.windowsupdate.com" -UseBasicParsing -ErrorAction Stop | Out-Null
                             }
                             catch {
                                 return "CantConnectToDownloadWebsite", $FilePath
                             }
+                            
+                            #try to download using BitsTransfer first
                             try {
-                                Start-BitsTransfer -Source $link -Destination $file -DisplayName "Downloading $filepath to $path"
+                                Start-BitsTransfer -Source $link -Destination $file -ErrorAction Stop -Asynchronous | Out-Null
+
+                                $BitsJob = Get-BitsTransfer -Name "BITS Transfer"
+
+                                if($BitsJob.JobState -eq "Error" -or !$BitsJob) {
+                                    Throw "Error with BitsTransfer"
+                                }
+                               
+                                while ($BitsJob.JobState -eq "Transferring" -or $BitsJob.JobState -eq "Connecting"  -and $BitsPctComplete -ne 100){                                    
+                                    $BitsPctComplete = ($BitsJob.BytesTransferred / $BitsJob.BytesTotal)*100
+                                    Write-Progress -PercentComplete $BitsPctComplete -Id 1 -Activity "Downloading $FilePath $BitsPctComplete % complete"
+                                    
+                                    if($BitsJob.JobState -eq "Error") {
+                                        Throw "Error with BitsTransfer"
+                                    }
+
+                                    Start-Sleep 5
+                                } 
                             }
+
                             catch {
+                                Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer      
+                                
                                 Write-Verbose "Start-BitsTransfer failed trying DownloadFile method instead."
+                                Write-Progress -Activity "Downloading $filepath to $path" -Completed
+
                                 Write-Progress -Activity "Downloading $FilePath to $path" -Id 1
-                                (New-Object Net.WebClient).DownloadFile($link, $file)
+                                #(New-Object Net.WebClient).DownloadFile($link, $file)
+                                Start-sleep 5
                                 Write-Progress -Activity "Downloading $FilePath" -Id 1 -Completed
                             }
                             
