@@ -27,7 +27,9 @@ function Save-KBFile {
         Then adapted again for general use without dbatools
         See https://github.com/sqlcollaborative/dbatools/pull/5863 for screenshots
 
-        Patrick Cull - I've added a retry loop to this function as I found it failed intermittently. 
+        Patrick Cull - Changes I've made;
+            - I've added a retry loop to this function as I found it failed intermittently. 
+            - Changed some of the download code so it works a bit better with SQL Server exe files, because that's all this module uses it for.
 
     .EXAMPLE
         PS C:\> Save-KBFile -Name KB4057119
@@ -181,7 +183,7 @@ function Save-KBFile {
                                         Throw "Error with BitsTransfer"
                                     }
 
-                                    Start-Sleep 0.1
+                                    Start-Sleep 1
                                 } 
                             }
                             
