@@ -34,10 +34,10 @@ function Get-SPInstancePatchDetails {
             }
             
             #Get the current patchlevel of the target instance along with the location of the SQL Server ERROR log - which we use to get more info about the instance.
-            $InstancePatchInfo = Invoke-Command -ComputerName $TargetServer {
-                $InstanceRegPath = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL").$Using:InstanceName
+            Invoke-Command -ComputerName $TargetServer {
+                $InstanceRegPath = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL") | Select-Object -ExpandProperty $Using:InstanceName
                 $InstanceVersionInfo = (Get-ItemProperty -path "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$InstanceRegPath\Setup")
-
+            
                 $InstanceParameters = (Get-ItemProperty -path "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$InstanceRegPath\MSSQLServer\Parameters")
                 $ErrorLogLocation = ($InstanceParameters.PSObject.properties | ForEach-Object {$_.Value} | Where-Object {$_ -like "*ERRORLOG"}) -replace '-e'
                 
