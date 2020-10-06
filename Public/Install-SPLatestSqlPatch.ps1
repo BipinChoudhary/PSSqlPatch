@@ -149,7 +149,7 @@ function Install-SPLatestSqlPatch {
             if($LatestServicePackNumber -gt $InstancePatchDetails.ServicePack) {
                 
                 $LatestServicePackFile = $ApplicablePathes | Where-Object{$_.PatchType -eq "ServicePack" -and $_.ServicePack -eq $LatestServicePackNumber}
-                $LatestSPLocation = $LatestCumlativeUpdate.$LatestServicePackFile + "\" + $LatestServicePackFile.PatchFileName
+                $LatestSPLocation = $LatestServicePackFile.PatchFileDirectory + "\" + $LatestServicePackFile.PatchFileName
                 Write-SPUpdate "Applying Service Pack SP$LatestServicePackNumber from $LatestSPLocation" -UpdateType Info -Logfile $LogFile
                 Install-SPSqlPatchFile -TargetServer $TargetServer -InstanceName $InstanceName -SourcePatchFile $LatestSPLocation -Logfile $LogFile -Force:$Force
             
