@@ -93,7 +93,7 @@ function Save-KBFile {
                 # Added loop, as sometimes the DownloadDialog below doesn't work on the Microsoft website itself, so we retry up to 10 times.
                 $RetryCount = 0
                 while(!$links -and $RetryCount -ne 10) {
-                $links = Invoke-WebRequest -Uri 'http://www.catalog.update.microsoft.com/DownloadDialog.aspx' -Method Post -Body $body |
+                $links = Invoke-WebRequest -Uri 'https://www.catalog.update.microsoft.com/DownloadDialog.aspx' -Method Post -Body $body |
                     Select-Object -ExpandProperty Content |
                     Select-String -AllMatches -Pattern "(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)" |
                     Select-Object -Unique
