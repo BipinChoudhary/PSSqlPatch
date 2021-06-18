@@ -62,7 +62,7 @@ function Save-KBFile {
                 [string]$Name
             )
             $kb = $Name.Replace("KB", "")
-            $results = Invoke-WebRequest -Uri "http://www.catalog.update.microsoft.com/Search.aspx?q=KB$kb"
+            $results = Invoke-WebRequest -Uri "http://www.catalog.update.microsoft.com/Search.aspx?q=KB$kb" -UseBasicParsing
             $kbids = $results.InputFields |
                 Where-Object { $_.type -eq 'Button' -and $_.Value -eq 'Download' } |
                 Select-Object -ExpandProperty  ID
@@ -93,7 +93,7 @@ function Save-KBFile {
                 # Added loop, as sometimes the DownloadDialog below doesn't work on the Microsoft website itself, so we retry up to 10 times.
                 $RetryCount = 0
                 while(!$links -and $RetryCount -ne 10) {
-                $links = Invoke-WebRequest -Uri 'https://www.catalog.update.microsoft.com/DownloadDialog.aspx' -Method Post -Body $body |
+                $links = Invoke-WebRequest -Uri 'https://www.catalog.update.microsoft.com/DownloadDialog.aspx' -UseBasicParsing -Method Post -Body $body |
                     Select-Object -ExpandProperty Content |
                     Select-String -AllMatches -Pattern "(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)" |
                     Select-Object -Unique
@@ -109,6 +109,7 @@ function Save-KBFile {
                 }
                 else {
                     Write-Verbose "Success. Download link returned, proceeding with the download."
+                    $links | fl | Write-Verbose
                 }
 
                 foreach ($link in $links) {
@@ -189,7 +190,7 @@ function Save-KBFile {
                             
                             #If BitsTransfer fails, try DownloadFile instead.
                             catch {
-                                Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer      
+                                Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer -ErrorAction SilentlyContinue  
                                 
                                 Write-Verbose "Start-BitsTransfer failed trying DownloadFile method instead."
 
@@ -199,7 +200,7 @@ function Save-KBFile {
                             }
                             #cleanup in case BitsTransfer stopped mid download.
                             finally {
-                                Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer
+                                Get-BitsTransfer -Name "BITS Transfer" | Complete-BitsTransfer -ErrorAction SilentlyContinue  
                             }
                             
                             if (Test-Path -Path $file) {
