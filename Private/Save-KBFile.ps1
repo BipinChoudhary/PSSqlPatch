@@ -109,7 +109,6 @@ function Save-KBFile {
                 }
                 else {
                     Write-Verbose "Success. Download link returned, proceeding with the download."
-                    $links | fl | Write-Verbose
                 }
 
                 foreach ($link in $links) {
